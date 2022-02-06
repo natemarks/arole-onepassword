@@ -2,4 +2,4 @@
 ---
 - name: natemarks.onepassword
   src: https://github.com/natemarks/arole-onepassword
-  version: v0.0.0
+  version: v0.0.1
