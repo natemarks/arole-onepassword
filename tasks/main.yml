@@ -1,20 +1,62 @@
 ---
-- name: Download makemine tarball
+- name: Download keyring file
+  become: yes
   get_url:
-    url: https://github.com/natemarks/makemine/releases/download/v{{ version }}/makemine_{{ version }}_linux_amd64.tar.gz
-    dest: ~/makemine_{{ version }}_linux_amd64.tar.gz
-    checksum: sha1:{{ sha256 }}
+    url: https://downloads.1password.com/linux/keys/1password.asc
+    dest: /usr/share/keyrings/1password-archive-keyring.asc
     mode: '0644'
 
-- name: Extract /tmp/makemine_{{ version }}_linux_amd64.tar.gz in /tmp
-  ansible.builtin.unarchive:
-    src: "{{ ansible_env.HOME }}/makemine_{{ version }}_linux_amd64.tar.gz"
-    dest: "{{ ansible_env.HOME }}"
-
-- name: Copy makemine to /usr/local/bin
+- name: Dearmor keyring to create gpg file from asc file
   become: yes
-  ansible.builtin.copy:
-    src: "{{ ansible_env.HOME }}/makemine"
-    dest: /usr/local/bin/makemine
+  ansible.builtin.command: sudo gpg --output /usr/share/keyrings/1password-archive-keyring.gpg --dearmor /usr/share/keyrings/1password-archive-keyring.asc
+  args:
+    creates: /usr/share/keyrings/1password-archive-keyring.gpg
+
+- name: Add the 1password repository
+  become: yes
+  ansible.builtin.template:
+    src: templates/1password.list.j2
+    dest: /etc/apt/sources.list.d/1password.list
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create debsig policy directory
+  become: yes
+  ansible.builtin.file:
+    path: /etc/debsig/policies/AC2D62742012EA22
+    state: directory
     mode: '0755'
-  
+
+- name: Download debsig policy file
+  become: yes
+  get_url:
+    url: https://downloads.1password.com/linux/debian/debsig/1password.pol
+    dest: /etc/debsig/policies/AC2D62742012EA22/1password.pol
+    mode: '0644'
+
+- name: Create debsig keyrings directory
+  become: yes
+  ansible.builtin.file:
+    path: /usr/share/debsig/keyrings/AC2D62742012EA22
+    state: directory
+    mode: '0755'
+
+- name: Download debsig keyring file
+  become: yes
+  get_url:
+    url: https://downloads.1password.com/linux/keys/1password.asc
+    dest: /usr/share/debsig/keyrings/AC2D62742012EA22/1password.asc
+    mode: '0644'
+
+- name: Run dearmor to create gpg file from asc file
+  become: yes
+  ansible.builtin.command: sudo gpg --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg --dearmor /usr/share/debsig/keyrings/AC2D62742012EA22/1password.asc
+  args:
+    creates: /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+
+- name: Update cache and install 1password
+  become: yes
+  apt:
+    name: 1password
+    update_cache: yes
