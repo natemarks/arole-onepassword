@@ -1,5 +1,0 @@
-# requirements.yml
----
-- name: natemarks.awscli_v2
-  src: https://github.com/natemarks/ansible-role-awscli_v2
-  version: v0.0.3
