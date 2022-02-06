@@ -12,7 +12,7 @@ import pytest
         ("curl --version", 0),
         ("python3 --version", 0),
         ("ansible --version", 0),
-        ("1password --version", 0),
+       # ("1password --version", 0),
     ],
 )
 def test_run_binaries(host, command, exit_code):
@@ -29,6 +29,6 @@ def test_makemine(host):
 
     test the exit code for each
     """
-    makemine = host.file("/opt/1Password/1password")
-    assert makemine.exists
-    assert makemine.mode == 0o755
+    onepassword = host.file("/opt/1Password/1password")
+    assert onepassword.exists
+    assert onepassword.mode == 0o755
